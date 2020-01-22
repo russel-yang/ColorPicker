@@ -1,0 +1,23 @@
+{
+  "name": "colorpicker",
+  "version": "1.0.0",
+  "description": "Vanilla HTML5 UI Extension template implementing the basic lifecycle methods to better understand the concept.",
+  "main": "index.js",
+  "scripts": {
+    "start": "live-server --port=8000 --https=https.config.js .",
+    "deploy": "contentful extension create" 
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/russel-yang/ColorPicker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/russel-yang/ColorPicker/issues"
+  },
+  "homepage": "https://github.com/russel-yang/ColorPicker#readme",
+  "devDependencies": {
+    "live-server": "^1.2.1"
+  }
+}
