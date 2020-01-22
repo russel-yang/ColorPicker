@@ -1,74 +1,180 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <!-- UI Extensions CSS -->
-  <link rel="stylesheet" href="https://contentful.github.io/ui-extensions-sdk/cf-extension.css">
-  <!-- UI Extensions SDK -->
-  <script src="https://unpkg.com/contentful-ui-extensions-sdk@3"></script>
-</head>
-<body>
-  <!-- Custom markup of the UI Extension -->
-  <div class="cf-form-field">
-    <input type="text" class="cf-form-input">
-    <div class="cf-form-hint">I am a UI Extension.</div>
-    <div class="cf-form-hint">Instance params: <span class="instance-param-value"></span></div>
-    <div class="cf-form-hint">Installation params: <span class="installation-param-value"></span></div>
-  </div>
+  <head>
+    <meta charset="utf-8" />
+    <!-- UI Extensions CSS -->
+    <link
+      rel="stylesheet"
+      href="https://contentful.github.io/ui-extensions-sdk/cf-extension.css"
+    />
+    <!-- UI Extensions SDK -->
+    <script src="https://unpkg.com/contentful-ui-extensions-sdk@3"></script>
+    <script src="https://code.jquery.com/jquery-git.min.js"></script>
 
-  <!-- Custom logic of the UI Extension -->
-  <script>
-    'use strict';
-
-    // When UI Extensions SDK is loaded the callback will be executed.
-    window.contentfulExtension.init(initExtension);
-
-    function initExtension (extensionsApi) {
-      // "extensionsApi" is providing an interface documented here:
-      // https://github.com/contentful/ui-extensions-sdk/blob/master/docs/ui-extensions-sdk-frontend.md
-
-      // Automatically adjust UI Extension size in the Web App.
-      extensionsApi.window.startAutoResizer();
-
-      var inputEl = document.querySelector('.cf-form-input');
-
-      //  The field this UI Extension is assigned to.
-      var field = extensionsApi.field;
-
-      document.querySelector('.instance-param-value').appendChild(document.createTextNode(extensionsApi.parameters.instance.exampleParameter))
-      document.querySelector('.installation-param-value').appendChild(document.createTextNode(extensionsApi.parameters.installation.exampleParameter))
-
-
-      // Callback for changes of the field value.
-      var detachValueChangeHandler = field.onValueChanged(valueChangeHandler);
-      // Handle keyboard input.
-      inputEl.addEventListener('input', keyboardInputHandler);
-      // Handle DOM "onbeforeunload" event.
-      window.addEventListener('onbeforeunload', unloadHandler);
-
-      // Handler for external field value changes (e.g. when multiple authors are working on the same entry).
-      function valueChangeHandler (value) {
-        inputEl.value = value || '';
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      .colorIndicator {
+        margin-left: 12px;
+        margin-right: 4px;
+        display: inline-block;
+        width: 12px;
+        height: 12px;
       }
 
-      // Event handler for keyboard input.
-      function keyboardInputHandler () {
-        var value = inputEl.value;
-        if (typeof value !== 'string' || value === '') {
-          field.removeValue();
+      ul {
+        margin-top: 6px;
+      }
+
+      li {
+        list-style: none;
+        padding-left: 8px;
+      }
+
+      li input {
+        margin-bottom: 2px;
+      }
+
+      .linkClear {
+        margin-left: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Custom markup of the UI Extension -->
+    <div class="cf-form-field">
+      <div class="cf-form-hint">
+        check figma for a list of allowed color values, if you do not select a
+        value, it will use app default value.
+      </div>
+      <ul id="selections"></ul>
+    </div>
+
+    <!-- Custom logic of the UI Extension -->
+    <script>
+      "use strict";
+
+      // When UI Extensions SDK is loaded the callback will be executed.
+      window.contentfulExtension.init(initExtension);
+
+      function initExtension(extensionsApi) {
+        // "extensionsApi" is providing an interface documented here:
+        // https://github.com/contentful/ui-extensions-sdk/blob/master/docs/ui-extensions-sdk-frontend.md
+
+        // Automatically adjust UI Extension size in the Web App.
+        extensionsApi.window.startAutoResizer();
+
+        var inputEl = document.querySelector(".cf-form-input");
+
+        //  The field this UI Extension is assigned to.
+        var field = extensionsApi.field;
+
+        console.log(field.getValue());
+
+        function getPreDefinedValues() {
+          var values = null;
+          var validations = extensionsApi.field.validations;
+          for (var i = 0; i < validations.length; i++) {
+            var validation = validations[i];
+            if ("in" in validation) {
+              values = validation["in"];
+            }
+          }
+          return values;
+        }
+
+        var clearHandler = function() {
+          field.removeValue().then(function() {
+            $("#selections input:checked").prop("checked", false);
+
+            $("#selections")
+              .find("a.linkClear")
+              .remove();
+          });
+          return false;
+        };
+
+        var clearLink = $('<a class="linkClear">Clear</a>').on(
+          "click",
+          clearHandler
+        );
+
+        var values = getPreDefinedValues();
+        if (values == null || values.length < 1) {
         } else {
-          field.setValue(value);
+          $.each(values, function(index, value) {
+            $("#selections").append(
+              $("<li/>")
+                .append(
+                  $("<input>")
+                    .attr("id", "option" + index)
+                    .attr("type", "radio")
+                    .attr("name", "color")
+                    .val(value)
+                    .prop("checked", value == field.getValue())
+                    .click(function(e) {
+                      $("#selections input:checked").prop("checked", false);
+                      $(this).prop("checked", true);
+                      field.setValue($(this).val());
+                      $("#selections")
+                        .find("a.linkClear")
+                        .remove();
+                      $(this)
+                        .next()
+                        .append(clearLink);
+                    })
+                )
+                .append(
+                  $("<label/>")
+                    .attr("for", "option" + index)
+                    .append(
+                      $("<div/>")
+                        .addClass("colorIndicator")
+                        .css("background-color", value)
+                    )
+                    .append(
+                      $("<span/>").text(value),
+                      value == field.getValue() ? clearLink : null
+                    )
+                )
+            );
+          });
+        }
+
+        document
+          .querySelector(".instance-param-value")
+          .appendChild(
+            document.createTextNode(
+              extensionsApi.parameters.instance.exampleParameter
+            )
+          );
+        document
+          .querySelector(".installation-param-value")
+          .appendChild(
+            document.createTextNode(
+              extensionsApi.parameters.installation.exampleParameter
+            )
+          );
+
+        var valueChangeHandler = function() {
+          console.log(valueChangeHandler);
+        };
+
+        // Callback for changes of the field value.
+        var detachValueChangeHandler = field.onValueChanged(valueChangeHandler);
+
+        // Handle DOM "onbeforeunload" event.
+        window.addEventListener("onbeforeunload", unloadHandler);
+
+        // Event handler for window unload.
+        function unloadHandler() {
+          window.removeEventListener("onbeforeunload", unloadHandler);
+          detachValueChangeHandler();
         }
       }
-
-      // Event handler for window unload.
-      function unloadHandler () {
-        window.removeEventListener('onbeforeunload', unloadHandler);
-        inputEl.removeEventListener('input', keyboardInputHandler);
-        detachValueChangeHandler();
-      }
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
-© 2020 GitHub, Inc.

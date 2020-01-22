@@ -1,7 +1,7 @@
 {
     "id": "color-pick",
     "name": "UI Extension Color picker",
-    "srcdoc": "index.html",
+    "src": "https://localhost:8000/index.html",
     "fieldTypes": ["Symbol", "Text"],
     "parameters": {
       "instance": [
