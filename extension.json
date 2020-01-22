@@ -1,0 +1,22 @@
+{
+    "id": "color-pick",
+    "name": "UI Extension Color picker",
+    "srcdoc": "index.html",
+    "fieldTypes": ["Symbol", "Text"],
+    "parameters": {
+      "instance": [
+        {
+          "id": "exampleParameter",
+          "type": "Symbol",
+          "name": "An example instance parameter"
+        }
+      ],
+      "installation": [
+        {
+          "id": "exampleParameter",
+          "type": "Symbol",
+          "name": "An example installation parameter"
+        }
+      ]
+    }
+  }
